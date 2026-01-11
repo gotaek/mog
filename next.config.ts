@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // output: 'export', // Removed to enable SSR/Edge Runtime
+  output: 'export',
   images: {
     unoptimized: true,
   },
