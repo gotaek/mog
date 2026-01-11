@@ -209,20 +209,22 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans pb-20 relative">
-      <AdminHeader />
+    <div className="h-screen bg-neutral-950 text-neutral-100 font-sans flex flex-col overflow-hidden">
+      <div className="shrink-0">
+        <AdminHeader />
+      </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="flex-1 min-h-0 max-w-7xl mx-auto w-full px-4 py-8">
         {message && (
-          <div className={`p-4 mb-6 rounded-lg font-bold text-sm ${message.type === 'success' ? 'bg-green-900/50 text-green-300 border border-green-800' : 'bg-red-900/50 text-red-300 border border-red-800'}`}>
+          <div className={`p-4 mb-4 rounded-lg font-bold text-sm shrink-0 ${message.type === 'success' ? 'bg-green-900/50 text-green-300 border border-green-800' : 'bg-red-900/50 text-red-300 border border-red-800'}`}>
             {message.text}
           </div>
         )}
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Form Section */}
-          <div className="lg:col-span-1">
-            <div className={`bg-neutral-900 border ${editingId ? 'border-red-500/50' : 'border-neutral-800'} rounded-2xl p-6 sticky top-24 transition-colors`}>
+        <div className="grid lg:grid-cols-3 gap-8 h-full">
+          {/* Form Section - Independently Scrollable */}
+          <div className="lg:col-span-1 h-full overflow-y-auto pr-2 custom-scrollbar">
+            <div className={`bg-neutral-900 border ${editingId ? 'border-red-500/50' : 'border-neutral-800'} rounded-2xl p-6 transition-colors`}>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold flex items-center gap-2">
                   {editingId ? <Pencil className="w-5 h-5 text-red-500" /> : <Plus className="w-5 h-5 text-red-500" />} 
@@ -324,7 +326,7 @@ export default function AdminPage() {
                     value={formData.period}
                     onChange={e => setFormData({...formData, period: e.target.value})}
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm focus:border-red-500 outline-none"
-                    placeholder="예: 2024.03.01 ~ 소진 시"
+                    placeholder="예: 2024.03.01 ~ 2024.03.02"
                   />
                 </div>
 
@@ -376,12 +378,14 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* List Section */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between mb-2">
+          {/* List Section - Independently Scrollable */}
+          <div className="lg:col-span-2 space-y-4 h-full overflow-y-auto pr-2 custom-scrollbar">
+             <div className="sticky top-0 bg-neutral-950 z-10 pb-2"> {/* Header sticks within list */}
+                <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold">등록된 이벤트 ({events.length})</h2>
               {loading && <Loader2 className="w-4 h-4 animate-spin text-neutral-500" />}
             </div>
+          </div>
 
             {events.length === 0 && !loading ? (
               <div className="text-neutral-500 bg-neutral-900/50 p-8 rounded-2xl text-center border border-dashed border-neutral-800">

@@ -165,7 +165,7 @@ export default function Home() {
               Live Goods Feed
               {isLoading && <span className="ml-4 text-sm font-normal text-neutral-500 animate-pulse">Syncing...</span>}
             </h2>
-            <p className="text-neutral-400 mt-1">실시간으로 업데이트되는 영화관별 공식 굿즈 정보를 확인하세요.</p>
+            <p className="text-neutral-400 mt-1">영화관별 공식 굿즈 정보를 확인하세요.</p>
           </div>
 
         </div>
