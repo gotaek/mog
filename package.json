@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint",
+    "crawl": "tsx scripts/crawl-megabox.ts",
+    "update-status": "tsx scripts/update-status.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -87,22 +87,26 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
         />
         <div className="absolute top-3 left-3 flex flex-col gap-1 items-start">
           <CinemaBadge cinema={event.cinema} />
-          {isActive && (
-            <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
+        </div>
+        {/* Status Badges (Top Right) */}
+        <div className="absolute top-3 right-3 flex flex-col gap-1 items-end">
+          {event.status === '마감임박' && !isEnded && (
+            <div className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded animate-pulse shadow-lg">
+              마감임박
+            </div>
+          )}
+          {isEnded && (
+            <div className="bg-neutral-700 text-neutral-300 text-[10px] font-bold px-2 py-0.5 rounded shadow-lg">
+              종료됨
+            </div>
+          )}
+          {isActive && !isEnded && event.status !== '마감임박' && (
+            <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md border border-green-500/30 text-green-400 text-[10px] font-bold px-2 py-1 rounded-full shadow-lg">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"></div>
               진행중
-            </span>
+            </div>
           )}
         </div>
-        {event.status === '마감임박' && !isEnded && (
-          <div className="absolute top-3 right-3 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded animate-pulse">
-            마감임박
-          </div>
-        )}
-        {isEnded && (
-          <div className="absolute top-3 right-3 bg-neutral-700 text-neutral-300 text-[10px] font-bold px-2 py-0.5 rounded">
-            종료됨
-          </div>
-        )}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/60 to-transparent p-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
           <p className="text-[10px] text-red-400 font-bold mb-1 uppercase tracking-wider italic flex items-center gap-1">
             <Sparkles className="w-3 h-3" /> {event.goodsType}
