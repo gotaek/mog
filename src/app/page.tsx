@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Header } from '@/components/Header';
+import { CinemaFilter } from '@/components/CinemaFilter';
 import { EventCard } from '@/components/EventCard';
 import { EventModal } from '@/components/EventModal';
 import { Event } from '@/types';
@@ -103,13 +104,13 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <Header 
-        filter={filter} 
-        setFilter={setFilter} 
         searchQuery={searchQuery} 
         setSearchQuery={setSearchQuery} 
       />
 
       <main className="max-w-6xl mx-auto px-4 py-8">
+        <CinemaFilter filter={filter} setFilter={setFilter} />
+
         <div className="mb-8 flex items-end justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">

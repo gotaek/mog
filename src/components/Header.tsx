@@ -1,13 +1,11 @@
 import { Search } from 'lucide-react';
 
 interface HeaderProps {
-  filter: string;
-  setFilter: (filter: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ filter, setFilter, searchQuery, setSearchQuery }) => {
+export const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
   return (
     <header className="sticky top-0 z-40 bg-neutral-950/80 backdrop-blur-md border-b border-neutral-800">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -17,22 +15,6 @@ export const Header: React.FC<HeaderProps> = ({ filter, setFilter, searchQuery, 
           <h1 className="text-xl font-black tracking-tighter uppercase italic">CINEFEEL</h1>
         </div>
         
-        <div className="flex items-center gap-1 bg-neutral-900 p-1 rounded-lg border border-neutral-800 overflow-x-auto scrollbar-hide max-w-[200px] md:max-w-none no-scrollbar">
-          {['전체', 'CGV', '메가박스', '롯데시네마'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setFilter(tab)}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
-                filter === tab 
-                ? 'bg-neutral-800 text-white shadow-sm' 
-                : 'text-neutral-400 hover:text-neutral-200'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
           <input 
