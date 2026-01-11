@@ -22,7 +22,7 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) =
             placeholder="영화 또는 굿즈 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-neutral-900 border border-neutral-800 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/50 w-40 md:w-64"
+            className="bg-neutral-900 border border-neutral-800 rounded-full py-2 pl-10 pr-4 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-red-500/50 w-40 md:w-64"
           />
         </div>
       </div>
