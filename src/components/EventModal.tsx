@@ -24,13 +24,21 @@ export const EventModal: React.FC<EventModalProps> = ({ event, closeModal }) => 
           <X className="w-5 h-5 text-white" />
         </button>
 
-        {/* Poster Half - Fixed/Sticky on Desktop */}
-        <div className="md:w-[40%] relative shrink-0 bg-neutral-950">
-           {/* Mobile: 2/3 Aspect, Desktop: Full Height */}
-           <div className="aspect-[2/3] md:aspect-auto md:h-full md:absolute md:inset-0 w-full">
+        {/* Poster Half - Mobile: Dynamic Height / Desktop: Fixed width */}
+        <div 
+            className="relative shrink-0 bg-neutral-950 transition-all duration-300 ease-out md:w-[40%] md:h-full overflow-hidden"
+            style={{ 
+                height: typeof window !== 'undefined' && window.innerWidth < 768 ? `${Math.max(120, 400 - (document.getElementById('modal-content')?.scrollTop || 0))}px` : undefined 
+            }}
+        >
+           {/* Mobile: Dynamic aspect via height / Desktop: Full Height */}
+           <div className="w-full h-full relative">
             <img 
                 src={event.imageUrl} 
-                className="w-full h-full object-cover opacity-90" 
+                className="w-full h-full object-cover opacity-90 transition-all duration-300" 
+                style={{ 
+                    objectPosition: 'center top' 
+                }}
                 alt={event.title} 
             />
             {/* Gradient Overlay */}
@@ -39,7 +47,22 @@ export const EventModal: React.FC<EventModalProps> = ({ event, closeModal }) => 
         </div>
 
         {/* Content Half - Scrollable */}
-        <div className="md:w-[60%] flex flex-col bg-neutral-900 md:max-h-[90vh] overflow-y-auto">
+        <div 
+            id="modal-content"
+            className="md:w-[60%] flex flex-col bg-neutral-900 md:max-h-[90vh] overflow-y-auto h-full"
+            onScroll={(e) => {
+                // Trigger re-render for height update on mobile (naive approach for MVP)
+                // For better performance, we would use refs and direct DOM manipulation or Framer Motion
+                if (window.innerWidth < 768) {
+                    const poster = e.currentTarget.parentElement?.firstElementChild as HTMLElement;
+                    if (poster) {
+                        const scrollTop = e.currentTarget.scrollTop;
+                        const newHeight = Math.max(100, 400 - scrollTop);
+                        poster.style.height = `${newHeight}px`;
+                    }
+                }
+            }}
+        >
           <div className="p-8 md:p-12">
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-3">

@@ -17,12 +17,12 @@ export const Header: React.FC<HeaderProps> = ({ filter, setFilter, searchQuery, 
           <h1 className="text-xl font-black tracking-tighter uppercase italic">CINEFEEL</h1>
         </div>
         
-        <div className="hidden md:flex items-center gap-1 bg-neutral-900 p-1 rounded-lg border border-neutral-800">
+        <div className="flex items-center gap-1 bg-neutral-900 p-1 rounded-lg border border-neutral-800 overflow-x-auto scrollbar-hide max-w-[200px] md:max-w-none no-scrollbar">
           {['전체', 'CGV', '메가박스', '롯데시네마'].map((tab) => (
             <button
               key={tab}
               onClick={() => setFilter(tab)}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
                 filter === tab 
                 ? 'bg-neutral-800 text-white shadow-sm' 
                 : 'text-neutral-400 hover:text-neutral-200'
