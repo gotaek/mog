@@ -180,6 +180,10 @@ export default function Home() {
           closeModal={() => setSelectedEvent(null)} 
         />
       )}
+
+      <footer className="py-8 text-center text-neutral-800 text-xs">
+         Cinefeel v1.5 (2024.03 Update)
+      </footer>
     </div>
   );
 }
