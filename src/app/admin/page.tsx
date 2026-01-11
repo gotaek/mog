@@ -55,12 +55,16 @@ export default function AdminPage() {
         result = result.filter((e: any) => !e.is_visible);
     }
 
-    // 2. Sort directly by Date Descending (Newest First) -> Oldest at Bottom
-    // Using string comparison for "YYYY.MM.DD" works well!
+    // 2. Sort: [NEW first] -> [Date Descending]
     result.sort((a, b) => {
+        // Priority 1: is_new (True comes first)
+        if (a.is_new && !b.is_new) return -1;
+        if (!a.is_new && b.is_new) return 1;
+
+        // Priority 2: Period Date Descending (Newest first)
         const periodA = a.period || '';
         const periodB = b.period || '';
-        if (periodA > periodB) return -1; // Newer first
+        if (periodA > periodB) return -1;
         if (periodA < periodB) return 1;
         return 0;
     });
@@ -146,17 +150,17 @@ export default function AdminPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('정말 삭제하시겠습니까?')) return;
+    if (!confirm('정말 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
     if (!supabase) return;
 
     setActionLoading(true);
-    // Soft Delete (Hide)
-    const { error } = await supabase.from('events').update({ is_visible: false }).eq('id', id);
+    // Hard Delete
+    const { error } = await supabase.from('events').delete().eq('id', id);
     
     if (error) {
-      setMessage({ type: 'error', text: '숨김 처리 실패: ' + error.message });
+      setMessage({ type: 'error', text: '삭제 실패: ' + error.message });
     } else {
-      setMessage({ type: 'success', text: '이벤트가 숨김(비공개) 처리되었습니다.' });
+      setMessage({ type: 'success', text: '이벤트가 영구적으로 삭제되었습니다.' });
       if (editingId === id) resetForm();
       fetchEvents();
     }
