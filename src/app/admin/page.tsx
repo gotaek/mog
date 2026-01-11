@@ -380,7 +380,7 @@ export default function AdminPage() {
 
           {/* List Section - Independently Scrollable */}
           <div className="lg:col-span-2 space-y-4 h-full overflow-y-auto pr-2 custom-scrollbar">
-             <div className="sticky top-0 bg-neutral-950 z-10 pb-2"> {/* Header sticks within list */}
+             <div className="sticky top-0 bg-neutral-950 z-10 pt-2 pb-2"> {/* Header sticks within list */}
                 <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold">등록된 이벤트 ({events.length})</h2>
               {loading && <Loader2 className="w-4 h-4 animate-spin text-neutral-500" />}
@@ -405,7 +405,7 @@ export default function AdminPage() {
                     </div>
                     <h3 className="font-bold text-lg truncate mb-1">{event.event_title || event.title}</h3>
                     <p className="text-xs text-neutral-500 mb-2">{event.period}</p>
-                    <div className="flex gap-1 overflow-hidden">
+                    <div className="hidden sm:flex gap-1 overflow-hidden">
                        {event.locations?.slice(0, 3).map((loc: string, i: number) => (
                          <span key={i} className="text-[10px] bg-neutral-800 px-1.5 py-0.5 rounded text-neutral-400">{loc}</span>
                        ))}
