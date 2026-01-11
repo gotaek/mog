@@ -106,6 +106,11 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
               진행중
             </div>
           )}
+          {event.status === '예정' && !isEnded && !isActive && (
+            <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md border border-blue-500/30 text-blue-400 text-[10px] font-bold px-2 py-1 rounded-full shadow-lg">
+              예정
+            </div>
+          )}
         </div>
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/60 to-transparent p-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
           <p className="text-[10px] text-red-400 font-bold mb-1 uppercase tracking-wider italic flex items-center gap-1">
