@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Sparkles, Database } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { EventCard } from '@/components/EventCard';
 import { EventModal } from '@/components/EventModal';
@@ -42,7 +41,7 @@ export default function Home() {
           // Note: In a real app we would align types perfectly
           const mappedEvents: Event[] = data.map((item: {
              id: number;
-             title: string;
+             event_title: string;
              cinemas: { name: string } | null; // Joined table
              goods_type: string;
              period: string;
@@ -52,7 +51,7 @@ export default function Home() {
              status: string;
           }) => ({
             id: item.id,
-            title: item.title,
+            title: item.event_title, // Changed from item.title to item.event_title
             cinema: item.cinemas?.name || 'Unknown',
             goodsType: item.goods_type,
             period: item.period,
@@ -74,14 +73,30 @@ export default function Home() {
     fetchEvents();
   }, []);
 
+  // Sort events: Latest start date first
+  const sortedEvents = useMemo(() => {
+    return [...events].sort((a, b) => {
+      const getStartDate = (period: string) => {
+        // Extract first date "2024.03.01" from "2024.03.01 ~ ..."
+        const match = period.match(/(\d{4}\.\d{2}\.\d{2})/);
+        if (match) {
+          const [y, m, d] = match[0].split('.').map(Number);
+          return new Date(y, m - 1, d).getTime();
+        }
+        return 0; // Fallback for unknown dates
+      };
+      return getStartDate(b.period) - getStartDate(a.period);
+    });
+  }, [events]);
+
   const filteredEvents = useMemo(() => {
-    return events.filter(event => {
+    return sortedEvents.filter(event => {
       const matchFilter = filter === '전체' || event.cinema === filter;
       const matchSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           event.goodsType.toLowerCase().includes(searchQuery.toLowerCase());
       return matchFilter && matchSearch;
     });
-  }, [events, filter, searchQuery]);
+  }, [sortedEvents, filter, searchQuery]);
 
   return (
     <div className="min-h-screen">
@@ -107,9 +122,7 @@ export default function Home() {
             </h2>
             <p className="text-neutral-400 mt-1">실시간으로 업데이트되는 영화관별 공식 굿즈 정보를 확인하세요.</p>
           </div>
-          <div className="text-sm text-neutral-500 font-mono">
-            TOTAL: {filteredEvents.length}
-          </div>
+
         </div>
 
         {/* Poster Grid */}

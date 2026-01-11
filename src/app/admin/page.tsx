@@ -28,14 +28,15 @@ export default function AdminPage() {
 
   // Form State
   const [formData, setFormData] = useState({
-    title: '',
+    event_title: '', // Renamed from title
+    movie_title: '', // New field
     cinema_id: 1,
     goods_type: '',
     period: '',
     image_url: '',
     official_url: '',
     locationsInput: '', // comma separated
-    status: '진행중' // Added status field for edit
+    status: '진행중'
   });
 
   const fetchEvents = async () => {
@@ -81,7 +82,8 @@ export default function AdminPage() {
 
   const resetForm = () => {
     setFormData({
-      title: '',
+      event_title: '',
+      movie_title: '',
       cinema_id: 1,
       goods_type: '',
       period: '',
@@ -96,7 +98,8 @@ export default function AdminPage() {
   const handleEdit = (event: any) => {
     setEditingId(event.id);
     setFormData({
-      title: event.title,
+      event_title: event.event_title,
+      movie_title: event.movie_title || '',
       cinema_id: event.cinema_id,
       goods_type: event.goods_type,
       period: event.period,
@@ -140,7 +143,7 @@ export default function AdminPage() {
       setFormData({
         ...formData,
         image_url: getPosterUrl(movie.poster_path),
-        title: movie.title // Always update title with TMDB official title
+        movie_title: movie.title // Set Title from TMDB to movie_title
       });
       setIsPosterModalOpen(false);
       setPosterQuery('');
@@ -156,7 +159,8 @@ export default function AdminPage() {
     const locationsArray = formData.locationsInput.split(',').map(s => s.trim()).filter(Boolean);
 
     const payload = {
-      title: formData.title,
+      event_title: formData.event_title,
+      movie_title: formData.movie_title,
       cinema_id: formData.cinema_id,
       goods_type: formData.goods_type,
       period: formData.period,
@@ -231,20 +235,31 @@ export default function AdminPage() {
               
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">영화 제목</label>
+                  <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">이벤트 제목 (화면 표시)</label>
+                  <input 
+                    required
+                    type="text" 
+                    value={formData.event_title}
+                    onChange={e => setFormData({...formData, event_title: e.target.value})}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm focus:border-red-500 outline-none"
+                    placeholder="예: 듄: 파트 2 오리지널 티켓"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">영화 원제 (포스터 검색용)</label>
                   <div className="flex gap-2">
                     <input 
-                      required
                       type="text" 
-                      value={formData.title}
-                      onChange={e => setFormData({...formData, title: e.target.value})}
+                      value={formData.movie_title}
+                      onChange={e => setFormData({...formData, movie_title: e.target.value})}
                       className="flex-1 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm focus:border-red-500 outline-none"
                       placeholder="예: 듄: 파트 2"
                     />
                     <button 
                       type="button"
                       onClick={() => {
-                        setPosterQuery(formData.title); // Pre-fill search with current title
+                        setPosterQuery(formData.movie_title || formData.event_title); 
                         setIsPosterModalOpen(true);
                       }}
                       className="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 p-2 rounded-lg transition-colors"
@@ -382,7 +397,7 @@ export default function AdminPage() {
                       <CinemaBadge cinema={event.cinemas?.name} />
                       <span className="text-xs text-red-400 font-bold uppercase">{event.goods_type}</span>
                     </div>
-                    <h3 className="font-bold text-lg truncate mb-1">{event.title}</h3>
+                    <h3 className="font-bold text-lg truncate mb-1">{event.event_title}</h3>
                     <p className="text-xs text-neutral-500 mb-2">{event.period}</p>
                     <div className="flex gap-1 overflow-hidden">
                        {event.locations?.slice(0, 3).map((loc: string, i: number) => (
