@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS events (
     locations TEXT[], -- Array of strings for branches ["용산", "영등포"]
     official_url TEXT,
     status TEXT DEFAULT '진행중', -- '진행중', '마감임박', '종료'
+    is_visible BOOLEAN DEFAULT FALSE, -- Human-in-the-loop: Default to false until approved
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 

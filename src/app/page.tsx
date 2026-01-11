@@ -30,7 +30,8 @@ export default function Home() {
           .select(`
             *,
             cinemas (name)
-          `); // Joins are powerful in Supabase
+          `)
+          .eq('is_visible', true); // Only show approved events
 
         if (error) {
           console.error('Supabase fetch error:', error);

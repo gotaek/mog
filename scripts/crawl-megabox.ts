@@ -7,6 +7,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 import * as dotenv from 'dotenv';
 import fs from 'fs';
+import path from 'path';
 
 dotenv.config({ path: '.env.local' });
 
@@ -105,13 +106,13 @@ async function crawlMegaboxList(): Promise<ScrapedEvent[]> {
         const results: any[] = [];
         
         items.forEach((item) => {
-            const link = item.querySelector('a.eventBtn'); // Correct class name
+            const linkEl = item.querySelector('a.eventBtn'); // Correct class name
             const titleEl = item.querySelector('.tit');
             const dateEl = item.querySelector('.date');
             const imgEl = item.querySelector('.img img');
 
-            if (link) {
-                const eventNo = link.getAttribute('data-no');
+            if (linkEl && titleEl) { // Ensure essential elements exist
+                const eventNo = linkEl.getAttribute('data-no');
                 if (!eventNo) return;
                 
                 const fullUrl = `https://www.megabox.co.kr/event/detail?eventNo=${eventNo}`;
@@ -119,24 +120,17 @@ async function crawlMegaboxList(): Promise<ScrapedEvent[]> {
                 results.push({
                     title: titleEl?.textContent?.trim() || 'No Title',
                     detailUrl: fullUrl,
-                    dateRange: dateEl?.textContent?.trim(),
-                    imageUrl: imgEl?.getAttribute('src')
+                    dateRange: dateEl?.textContent?.trim() || '',
+                    imageUrl: imgEl?.getAttribute('src') || ''
                 });
             }
         });
-        return { results, html: listContainer.innerHTML };
+
+        return results;
     });
-
-    if ('html' in events && typeof events.html === 'string') {
-        fs.writeFileSync('debug_html.txt', events.html);
-        console.log('Saved debug_html.txt');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const eventList = (events as any).results || [];
-
-    console.log(`Found ${eventList.length} events on the list page.`);
-    return eventList;
+    
+    console.log(`Found ${events.length} events on the list page.`);
+    return events;
 
   } catch (e) {
     console.error('Error in crawlMegaboxList:', e);
@@ -145,6 +139,7 @@ async function crawlMegaboxList(): Promise<ScrapedEvent[]> {
     await browser.close();
   }
 }
+
 
 /**
  * Gemini를 사용하여 이미지에서 이벤트 정보 추출
@@ -155,9 +150,7 @@ async function analyzeImageWithGemini(imagePath: string): Promise<{ movieTitle: 
   let rawResponse = '';
   
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
     const imageBuffer = fs.readFileSync(imagePath);
-    
     // Convert to base64
     const imageBase64 = imageBuffer.toString('base64');
 
@@ -174,8 +167,8 @@ async function analyzeImageWithGemini(imagePath: string): Promise<{ movieTitle: 
 
 2. "goodsType" (상품 종류):
    - 제공되는 상품의 종류를 추출하세요.
-   - 가능한 값: "Original Ticket" (오리지널 티켓), "TTT" (투티켓), "Poster" (포스터), "Badge" (배지), "Postcard" (포스트카드), "Sticker" (스티커), "Photo Card" (포토카드) 등
-   - 여러 종류가 있으면 쉼표로 구분하여 결합하세요 (예: "Poster, Badge")
+   - 가능한 값: "오리지널 티켓", "TTT", "포스터", "배지", "포스트카드", "스티커", "포토카드", "키링" 등
+   - 여러 종류가 있으면 쉼표로 구분하여 결합하세요 (예: "배지, 배지")
    - 이미지에서 정확히 확인할 수 없는 경우 "Unknown"을 사용하세요.
 
 3. "locations" (지점 정보):
@@ -199,33 +192,50 @@ async function analyzeImageWithGemini(imagePath: string): Promise<{ movieTitle: 
 `;
 
     console.log('🔍 Gemini 이미지 분석 시작...');
-    
 
-    let retries = 3;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // Candidate models in order of preference (Lite/Flash typically faster/cheaper)
+    const models = [
+        "gemini-2.5-flash-lite",
+        "gemini-2.5-flash", 
+        "gemini-2.5-pro",
+        "gemini-2.0-flash",
+        "gemini-2.0-pro"
+    ];
+
     let result: any;
-    
-    while (retries > 0) {
-        try {
-            result = await model.generateContent([
-                prompt,
-                { inlineData: { data: imageBase64, mimeType: "image/png" } }
-            ]);
-            break; // Success
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (e: any) {
-             if (e.message && e.message.includes('429')) {
-                 console.warn(`⏳ Gemini Rate Limit (429). Retrying in 20s... (${retries} left)`);
-                 await wait(20000); // Wait 20s
-                 retries--;
-             } else {
-                 throw e; // Other errors
-             }
+    let lastError: any;
+
+    // Try each model in order
+    modelLoop: for (const modelName of models) {
+        console.log(`🤖 Trying model: ${modelName}...`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        
+        let retries = 2; // Retry per model
+        while (retries > 0) {
+            try {
+                result = await model.generateContent([
+                    prompt,
+                    { inlineData: { data: imageBase64, mimeType: "image/png" } }
+                ]);
+                break modelLoop; // Success! Exit both loops
+            } catch (e: any) {
+                lastError = e;
+                if (e.message && e.message.includes('429')) {
+                    console.warn(`⏳ Rate Limit (429) on ${modelName}. Waiting 20s... (${retries} retries left)`);
+                    await wait(20000); // Wait 20s
+                    retries--;
+                } else {
+                    console.warn(`⚠️ Error with ${modelName}: ${e.message}. Trying next model/retry...`);
+                    // For non-429 errors, maybe move to next model immediately or retry?
+                    // Let's retry once more then move on
+                    retries--;
+                }
+            }
         }
     }
     
-    if (!result) throw new Error("Gemini analysis failed after retries.");
-
+    if (!result) throw new Error(`All Gemini models failed. Last error: ${lastError?.message}`);
+    
     rawResponse = result.response.text();
     console.log('📝 Gemini 원본 응답:', rawResponse.substring(0, 200) + (rawResponse.length > 200 ? '...' : ''));
 
@@ -312,7 +322,8 @@ async function saveToSheets(event: EnrichedEvent) {
     const sheet = doc.sheetsByIndex[0];
 
     // Check headers
-    const headers = ['event_title', 'movie_title', 'goods_type', 'locations', 'period', 'poster_url', 'detail_url', 'status'];
+    // Removed 'status', added 'crawled_at'
+    const headers = ['event_title', 'movie_title', 'goods_type', 'locations', 'period', 'poster_url', 'detail_url', 'crawled_at'];
     await sheet.loadHeaderRow(); // Try loading
     
     // If empty or mismatch, set headers
@@ -329,7 +340,7 @@ async function saveToSheets(event: EnrichedEvent) {
         'period': event.dateRange || '',
         'poster_url': event.posterPath || '',
         'detail_url': event.detailUrl,
-        'status': 'New'
+        'crawled_at': new Date().toISOString()
     });
     console.log(`Saved "${event.title}" to Google Sheets.`);
   } catch (e) {
@@ -347,7 +358,8 @@ async function saveToSupabase(event: EnrichedEvent) {
         image_url: event.posterPath, 
         locations: event.locations,
         official_url: event.detailUrl,
-        status: '진행중'
+        status: '진행중',
+        is_visible: false // Hidden by default, requires manual approval
     });
     if (error) console.error('Error saving to Supabase:', error);
     else console.log(`Saved "${event.title}" to Supabase.`);
@@ -419,7 +431,15 @@ async function processDetail(browser: Browser, url: string): Promise<string | nu
             });
         }
         
-        const screenshotPath = `temp_${Date.now()}.png`;
+        const imagesDir = path.join(__dirname, 'crawled_images');
+        if (!fs.existsSync(imagesDir)) {
+            fs.mkdirSync(imagesDir, { recursive: true });
+        }
+        
+        // Use event ID from URL or timestamp for filename
+        const eventIdMatch = url.match(/eventNo=(\d+)/);
+        const eventId = eventIdMatch ? eventIdMatch[1] : `unknown_${Date.now()}`;
+        const screenshotPath = path.join(imagesDir, `event_${eventId}.png`);
         
         if (element && usedSelector) {
             // 특정 요소만 스크린샷
@@ -472,6 +492,11 @@ async function processDetail(browser: Browser, url: string): Promise<string | nu
 
     // 3. Process each new event
     for (const event of newEvents) {
+        // Quick filter for testing to avoid rate limits
+        if (!event.title.includes('누벨바그')) {
+            continue;
+        }
+
         console.log(`Processing: ${event.title}...`);
         
         // A. Screenshot
@@ -483,8 +508,10 @@ async function processDetail(browser: Browser, url: string): Promise<string | nu
         const analysis = await analyzeImageWithGemini(screenshotPath);
         console.log("Gemini Analysis:", analysis);
         
-        // Cleanup screenshot
-        fs.unlinkSync(screenshotPath);
+        // Cleanup screenshot? 
+        // User requested: "이미지를 잘 정리해서 수집하도록 하나의 폴더를 만들어주고"
+        // So we do NOT delete it.
+        // fs.unlinkSync(screenshotPath);
 
         // C. TMDB - Skipped as requested
         // const posterPath = await searchTmdb(analysis.movieTitle || event.title);

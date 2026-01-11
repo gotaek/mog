@@ -37,8 +37,35 @@ export default function AdminPage() {
     image_url: '',
     official_url: '',
     locationsInput: '', // comma separated
-    status: '진행중'
+    status: '진행중',
+    is_visible: false // New field state
   });
+
+  // Filter State
+  const [filterVisibility, setFilterVisibility] = useState<'all' | 'hidden'>('all');
+
+  // Sorted and Filtered Events
+  const sortedAdminEvents = React.useMemo(() => {
+    let result = [...events];
+    
+    // 1. Filter
+    if (filterVisibility === 'hidden') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        result = result.filter((e: any) => !e.is_visible);
+    }
+
+    // 2. Sort directly by Date Descending (Newest First) -> Oldest at Bottom
+    // Using string comparison for "YYYY.MM.DD" works well!
+    result.sort((a, b) => {
+        const periodA = a.period || '';
+        const periodB = b.period || '';
+        if (periodA > periodB) return -1; // Newer first
+        if (periodA < periodB) return 1;
+        return 0;
+    });
+
+    return result;
+  }, [events, filterVisibility]);
 
   const fetchEvents = async () => {
     if (!isSupabaseConfigured() || !supabase) return;
@@ -91,7 +118,8 @@ export default function AdminPage() {
       image_url: '',
       official_url: '',
       locationsInput: '',
-      status: '진행중'
+      status: '진행중',
+      is_visible: true // Default to true when creating manually? Or false? Let's say true for manual creation.
     });
     setEditingId(null);
   };
@@ -108,7 +136,8 @@ export default function AdminPage() {
       image_url: event.image_url || '',
       official_url: event.official_url || '',
       locationsInput: event.locations ? event.locations.join(', ') : '',
-      status: event.status || '진행중'
+      status: event.status || '진행중',
+      is_visible: event.is_visible ?? false
     });
     window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to form
   };
@@ -118,12 +147,13 @@ export default function AdminPage() {
     if (!supabase) return;
 
     setActionLoading(true);
-    const { error } = await supabase.from('events').delete().eq('id', id);
+    // Soft Delete (Hide)
+    const { error } = await supabase.from('events').update({ is_visible: false }).eq('id', id);
     
     if (error) {
-      setMessage({ type: 'error', text: '삭제 실패: ' + error.message });
+      setMessage({ type: 'error', text: '숨김 처리 실패: ' + error.message });
     } else {
-      setMessage({ type: 'success', text: '삭제되었습니다.' });
+      setMessage({ type: 'success', text: '이벤트가 숨김(비공개) 처리되었습니다.' });
       if (editingId === id) resetForm();
       fetchEvents();
     }
@@ -169,7 +199,8 @@ export default function AdminPage() {
       image_url: formData.image_url,
       official_url: formData.official_url,
       locations: locationsArray,
-      status: formData.status
+      status: formData.status,
+      is_visible: formData.is_visible
     };
 
     let result;
@@ -344,6 +375,18 @@ export default function AdminPage() {
                         <option value="예정">예정</option>
                         </select>
                     </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">공개 여부</label>
+                        <select 
+                            value={formData.is_visible ? 'true' : 'false'}
+                            onChange={e => setFormData({...formData, is_visible: e.target.value === 'true'})}
+                            className={`w-full border border-neutral-800 rounded-lg px-3 py-2 text-sm focus:border-red-500 outline-none ${formData.is_visible ? 'bg-green-900/20 text-green-400' : 'bg-red-900/20 text-red-400'}`}
+                        >
+                            <option value="true">공개 (User Visible)</option>
+                            <option value="false">비공개 (Hidden)</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div>
@@ -379,65 +422,110 @@ export default function AdminPage() {
           </div>
 
           {/* List Section - Independently Scrollable */}
-          <div className="lg:col-span-2 space-y-4 h-full overflow-y-auto pr-2 custom-scrollbar">
-             <div className="sticky top-0 bg-neutral-950 z-10 pt-2 pb-2"> {/* Header sticks within list */}
+          <div className="lg:col-span-2 space-y-4 h-full overflow-y-auto pr-2 custom-scrollbar flex flex-col">
+             <div className="sticky top-0 bg-neutral-950 z-20 pt-2 pb-4 space-y-3 shadow-xl shadow-neutral-950/50"> 
                 <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">등록된 이벤트 ({events.length})</h2>
-              {loading && <Loader2 className="w-4 h-4 animate-spin text-neutral-500" />}
-            </div>
-          </div>
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    등록된 이벤트 
+                    <span className="text-neutral-500 text-sm font-normal">({events.length})</span>
+                  </h2>
+                  {loading && <Loader2 className="w-4 h-4 animate-spin text-neutral-500" />}
+                </div>
 
-            {events.length === 0 && !loading ? (
-              <div className="text-neutral-500 bg-neutral-900/50 p-8 rounded-2xl text-center border border-dashed border-neutral-800">
-                아직 등록된 이벤트가 없습니다.
-              </div>
-            ) : (
-              events.map((event) => (
-                <div key={event.id} className={`bg-neutral-900 border ${editingId === event.id ? 'border-blue-500/50 bg-blue-900/10' : 'border-neutral-800 hover:border-neutral-700'} rounded-xl p-4 flex gap-4 transition-all`}>
-                  <div className="w-16 h-24 bg-neutral-800 rounded-lg shrink-0 overflow-hidden relative group">
-                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={event.image_url} alt="" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex-grow min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <CinemaBadge cinema={event.cinemas?.name} />
-                      <span className="text-xs text-red-400 font-bold uppercase">{event.goods_type}</span>
+                {/* Management Controls */}
+                <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    {/* Visibility Filter */}
+                    <div className="flex bg-neutral-900 rounded-lg p-1 border border-neutral-800 shrink-0">
+                      <button 
+                        onClick={() => setFilterVisibility('all')}
+                        className={`px-3 py-1 text-xs rounded-md font-bold transition-cyan ${filterVisibility === 'all' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+                      >
+                        전체
+                      </button>
+                      <button 
+                        onClick={() => setFilterVisibility('hidden')}
+                        className={`px-3 py-1 text-xs rounded-md font-bold transition-cyan ${filterVisibility === 'hidden' ? 'bg-red-900/30 text-red-400 shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+                      >
+                        미공개 Only
+                      </button>
                     </div>
-                    <h3 className="font-bold text-lg truncate mb-1">{event.event_title || event.title}</h3>
-                    <p className="text-xs text-neutral-500 mb-2">{event.period}</p>
-                    <div className="hidden sm:flex gap-1 overflow-hidden">
-                       {event.locations?.slice(0, 3).map((loc: string, i: number) => (
-                         <span key={i} className="text-[10px] bg-neutral-800 px-1.5 py-0.5 rounded text-neutral-400">{loc}</span>
-                       ))}
-                       {(event.locations?.length || 0) > 3 && <span className="text-[10px] text-neutral-500 pl-1">...</span>}
+                </div>
+            </div>
+
+            <div className="space-y-3 pb-10">
+                {sortedAdminEvents.length === 0 && !loading ? (
+                <div className="text-neutral-500 bg-neutral-900/50 p-8 rounded-2xl text-center border border-dashed border-neutral-800">
+                    {events.length === 0 ? "아직 등록된 이벤트가 없습니다." : "조건에 맞는 이벤트가 없습니다."}
+                </div>
+                ) : (
+                sortedAdminEvents.map((event) => (
+                    <div key={event.id} className={`bg-neutral-900 border ${editingId === event.id ? 'border-blue-500/50 bg-blue-900/10' : !event.is_visible ? 'border-red-900/30 bg-red-900/5' : 'border-neutral-800 hover:border-neutral-700'} rounded-xl p-3 flex gap-3 transition-all group`}>
+                    
+                    {/* Image */}
+                    <div className="w-14 h-20 bg-neutral-800 rounded shrink-0 overflow-hidden relative border border-neutral-800/50">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={event.image_url} alt="" className={`w-full h-full object-cover ${!event.is_visible ? 'grayscale opacity-70' : ''}`} />
                     </div>
-                  </div>
-                  <div className="flex flex-col items-end justify-between gap-2">
-                     <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${event.status === '종료' ? 'bg-neutral-800 text-neutral-500' : event.status === '마감임박' ? 'bg-orange-900 text-orange-200' : 'bg-green-900 text-green-200'}`}>
-                        {event.status}
-                     </span>
-                     <div className="flex gap-1">
-                        <button 
-                            onClick={() => handleEdit(event)}
-                            disabled={actionLoading}
-                            className={`p-2 rounded-lg transition-colors ${editingId === event.id ? 'text-blue-500 bg-blue-500/20' : 'text-neutral-500 hover:text-blue-500 hover:bg-blue-500/10'}`}
-                            title="수정"
-                        >
-                            <Pencil className="w-4 h-4" />
-                        </button>
-                        <button 
-                            onClick={() => handleDelete(event.id)}
-                            disabled={actionLoading}
-                            className="p-2 text-neutral-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                            title="삭제"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </button>
-                     </div>
-                  </div>
+
+                    {/* Content */}
+                    <div className="flex-grow min-w-0 flex flex-col justify-between py-0.5">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <CinemaBadge cinema={event.cinemas?.name} size="sm" />
+                                <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">{event.goods_type}</span>
+                                {!event.is_visible && (
+                                    <span className="text-[10px] px-1.5 py-0.5 bg-red-950 border border-red-900 text-red-500 rounded font-bold uppercase">
+                                        비공개
+                                    </span>
+                                )}
+                            </div>
+                            <h3 className={`font-bold text-base truncate leading-tight ${!event.is_visible ? 'text-neutral-400 line-through decoration-red-900/50' : 'text-neutral-100'}`}>
+                                {event.event_title || event.title}
+                            </h3>
+                            <p className="text-xs text-neutral-500 mt-0.5 font-mono">{event.period}</p>
+                        </div>
+                        
+                        <div className="flex items-center gap-1 mt-1 overflow-hidden">
+                             {event.locations?.slice(0, 4).map((loc: string, i: number) => (
+                                <span key={i} className="text-[9px] bg-neutral-800/80 px-1.5 py-0.5 rounded text-neutral-500 border border-neutral-800">{loc}</span>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Actions & Status */}
+                    <div className="flex flex-col items-end justify-between gap-2 pl-2 border-l border-neutral-800/50">
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold whitespace-nowrap ${
+                            event.status === '종료' ? 'bg-neutral-800 text-neutral-600' : 
+                            event.status === '마감임박' ? 'bg-orange-900/50 text-orange-200 border border-orange-900/50' : 
+                            event.status === '예정' ? 'bg-blue-900/30 text-blue-300 border border-blue-900/30' :
+                            'bg-green-900/30 text-green-300 border border-green-900/30'
+                        }`}>
+                            {event.status}
+                        </span>
+
+                        <div className="flex gap-1">
+                            <button 
+                                onClick={() => handleEdit(event)}
+                                disabled={actionLoading}
+                                className={`p-1.5 rounded-md transition-colors ${editingId === event.id ? 'text-blue-400 bg-blue-500/20' : 'text-neutral-600 hover:text-blue-400 hover:bg-neutral-800'}`}
+                                title="수정"
+                            >
+                                <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button 
+                                onClick={() => handleDelete(event.id)}
+                                disabled={actionLoading}
+                                className={`p-1.5 rounded-md transition-colors ${!event.is_visible ? 'text-red-800 cursor-not-allowed opacity-50' : 'text-neutral-600 hover:text-red-400 hover:bg-neutral-800'}`}
+                                title="숨기기 (Soft Delete)"
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    </div>
                 </div>
               ))
             )}
+            </div>
           </div>
         </div>
       </main>
