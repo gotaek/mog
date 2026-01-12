@@ -43,16 +43,19 @@ export default function AdminPage() {
   });
 
   // Filter State
-  const [filterVisibility, setFilterVisibility] = useState<'all' | 'hidden'>('all');
+  const [filterVisibility, setFilterVisibility] = useState<'visible' | 'hidden' | 'ended'>('visible');
 
   // Sorted and Filtered Events
   const sortedAdminEvents = React.useMemo(() => {
     let result = [...events];
     
     // 1. Filter
-    if (filterVisibility === 'hidden') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (filterVisibility === 'visible') {
+        result = result.filter((e: any) => e.is_visible);
+    } else if (filterVisibility === 'hidden') {
         result = result.filter((e: any) => !e.is_visible);
+    } else if (filterVisibility === 'ended') {
+        result = result.filter((e: any) => e.status === '종료');
     }
 
     // 2. Sort: [NEW first] -> [Date Descending]
@@ -163,6 +166,23 @@ export default function AdminPage() {
       setMessage({ type: 'success', text: '이벤트가 영구적으로 삭제되었습니다.' });
       if (editingId === id) resetForm();
       fetchEvents();
+    }
+    setActionLoading(false);
+  };
+
+  const toggleNewStatus = async (id: number, currentStatus: boolean) => {
+    if (!supabase) return;
+    setActionLoading(true);
+    
+    const { error } = await supabase
+      .from('events')
+      .update({ is_new: !currentStatus })
+      .eq('id', id);
+
+    if (error) {
+      setMessage({ type: 'error', text: '상태 변경 실패: ' + error.message });
+    } else {
+      setEvents(prev => prev.map(e => e.id === id ? { ...e, is_new: !currentStatus } : e));
     }
     setActionLoading(false);
   };
@@ -446,16 +466,22 @@ export default function AdminPage() {
                     {/* Visibility Filter */}
                     <div className="flex bg-neutral-900 rounded-lg p-1 border border-neutral-800 shrink-0">
                       <button 
-                        onClick={() => setFilterVisibility('all')}
-                        className={`px-3 py-1 text-xs rounded-md font-bold transition-cyan ${filterVisibility === 'all' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+                        onClick={() => setFilterVisibility('visible')}
+                        className={`px-3 py-1 text-xs rounded-md font-bold transition-all ${filterVisibility === 'visible' ? 'bg-green-900/30 text-green-400 shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
                       >
-                        전체
+                        공개 Only
                       </button>
                       <button 
                         onClick={() => setFilterVisibility('hidden')}
-                        className={`px-3 py-1 text-xs rounded-md font-bold transition-cyan ${filterVisibility === 'hidden' ? 'bg-red-900/30 text-red-400 shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+                        className={`px-3 py-1 text-xs rounded-md font-bold transition-all ${filterVisibility === 'hidden' ? 'bg-red-900/30 text-red-400 shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
                       >
                         미공개 Only
+                      </button>
+                      <button 
+                        onClick={() => setFilterVisibility('ended')}
+                        className={`px-3 py-1 text-xs rounded-md font-bold transition-all ${filterVisibility === 'ended' ? 'bg-neutral-800 text-neutral-300 shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+                      >
+                        종료된 이벤트
                       </button>
                     </div>
                 </div>
@@ -488,9 +514,16 @@ export default function AdminPage() {
                                     </span>
                                 )}
                                 {event.is_new && (
-                                    <span className="text-[10px] px-1.5 py-0.5 bg-blue-500 text-white rounded font-bold uppercase animate-pulse">
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleNewStatus(event.id, true);
+                                        }}
+                                        className="text-[10px] px-1.5 py-0.5 bg-blue-500 text-white rounded font-bold uppercase animate-pulse hover:bg-blue-600 transition-colors"
+                                        title="클릭하여 NEW 해제"
+                                    >
                                         NEW
-                                    </span>
+                                    </button>
                                 )}
                             </div>
                             <h3 className={`font-bold text-base truncate leading-tight ${!event.is_visible ? 'text-neutral-400 line-through decoration-red-900/50' : 'text-neutral-100'}`}>
