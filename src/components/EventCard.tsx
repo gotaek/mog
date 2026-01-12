@@ -75,8 +75,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
       className="group cursor-pointer"
     >
       <div className={`relative aspect-[2/3] overflow-hidden rounded-2xl bg-neutral-900 border shadow-lg transition-all duration-300 
-        ${isEnded ? 'grayscale opacity-60 border-neutral-800' : ''}
-        ${isActive ? 'border-red-500/50 shadow-red-900/20' : 'border-neutral-800 group-hover:border-neutral-600'}
+        ${isEnded ? 'grayscale opacity-60 border-neutral-800' : 'border-neutral-800 group-hover:border-red-500/50'}
         ${!isEnded ? 'group-hover:shadow-red-500/10 group-hover:-translate-y-1' : ''}
       `}>
         {/* Using standard img for now to avoid Next.js Image config complexity with remote URLs in MVP */}
