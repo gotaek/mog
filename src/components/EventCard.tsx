@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, Calendar } from 'lucide-react';
+import Image from 'next/image';
 import { Event } from '@/types';
 import { CinemaBadge } from '@/components/ui/CinemaBadge';
 
@@ -79,9 +80,11 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
         ${!isEnded ? 'group-hover:shadow-red-500/10 group-hover:-translate-y-1' : ''}
       `}>
         {/* Using standard img for now to avoid Next.js Image config complexity with remote URLs in MVP */}
-        <img 
+        <Image 
           src={event.imageUrl} 
           alt={event.title}
+          width={400}
+          height={600}
           className={`w-full h-full object-cover transition-transform duration-500 ${isEnded ? '' : 'group-hover:scale-110'} opacity-80 ${isEnded ? '' : 'group-hover:opacity-100'}`}
         />
         <div className="absolute top-3 left-3 flex flex-col gap-1 items-start">
