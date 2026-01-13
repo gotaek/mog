@@ -48,9 +48,13 @@ async function updateEventStatuses() {
     return;
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalize to start of day
-  const now = new Date(); // To check if end date has passed (end of day)
+  // Use KST (UTC+9) for date calculations
+  const now = new Date();
+  const kstNow = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+  const today = new Date(kstNow);
+  today.setUTCHours(0, 0, 0, 0); // Normalize to start of day in KST
+
+  console.log('Time check (KST):', kstNow.toISOString());
 
   let updatedCount = 0;
 
@@ -65,11 +69,11 @@ async function updateEventStatuses() {
     let endDate: Date | null = null;
     
     if (periodParts.length > 1) {
-        // Handle "소진 시" (Until sold out) - treat as no specific end date unless manually closed
+        // Handle "소진 시" (Until sold out)
         if (!periodParts[1].includes('소진')) {
             endDate = parseDate(periodParts[1]);
             if (endDate) {
-                // Set end date to end of that day (23:59:59)
+                // Set end date to end of that day (23:59:59) in KST
                 endDate.setHours(23, 59, 59, 999);
             }
         }
@@ -78,18 +82,15 @@ async function updateEventStatuses() {
     let newStatus = event.status;
 
     // Logic 1: '예정' -> '진행중'
-    // If status is '예정' AND today >= startDate
     if (event.status === '예정' && startDate) {
-        if (today >= startDate) {
+        if (kstNow >= startDate) {
             newStatus = '진행중';
         }
     }
 
     // Logic 2: '진행중' -> '종료'
-    // If status is '진행중' AND today > endDate
-    // Note: If no endDate (e.g. '소진 시'), we do NOT auto-close.
     if (event.status === '진행중' && endDate) {
-        if (now > endDate) {
+        if (kstNow > endDate) {
             newStatus = '종료';
         }
     }
@@ -113,4 +114,9 @@ async function updateEventStatuses() {
   console.log(`Status update complete. Updated ${updatedCount} events.`);
 }
 
-updateEventStatuses();
+updateEventStatuses()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });

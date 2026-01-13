@@ -113,7 +113,7 @@ async function crawlCGVList(page: any): Promise<ScrapedEvent[]> {
     await wait(3000);
 
     // Listen for browser logs
-    page.on('console', msg => console.log('BROWSER:', msg.text()));
+    page.on('console', (msg: any) => console.log('BROWSER:', msg.text()));
 
     // Scrape events
     console.log('Scraping event list...');
@@ -126,10 +126,10 @@ async function crawlCGVList(page: any): Promise<ScrapedEvent[]> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const events = await page.evaluate(function(t) {
+    const events = await page.evaluate(function(t: number) {
         try {
             const todayDate = new Date(t);
-            const results = [];
+            const results: any[] = [];
             const processedTitles = new Set();
             
             // Search for event cards (li)
