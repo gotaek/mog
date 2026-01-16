@@ -146,7 +146,7 @@ export const TrendingSection: React.FC<TrendingSectionProps> = ({ events, onEven
                         </div>
                     ))
                 ) : (
-                    trendingEvents.map((event) => (
+                    trendingEvents.map((event, index) => (
                         <div 
                             key={event.id} 
                             className="flex-none w-[200px] md:w-[240px] snap-start transform transition-all duration-500 hover:-translate-y-2"
@@ -159,6 +159,7 @@ export const TrendingSection: React.FC<TrendingSectionProps> = ({ events, onEven
                                     event={event} 
                                     onClick={onEventClick}
                                     className="relative shadow-2xl" 
+                                    priority={index < 2}
                                 />
                             </div>
                         </div>
@@ -173,6 +174,7 @@ export const TrendingSection: React.FC<TrendingSectionProps> = ({ events, onEven
             .no-scrollbar {
                 -ms-overflow-style: none;
                 scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
             }
         `}</style>
     </section>

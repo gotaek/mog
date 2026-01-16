@@ -19,7 +19,6 @@ export default function Home() {
   const [filter, setFilter] = useState('전체');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isLiveMode, setIsLiveMode] = useState(false);
 
   useEffect(() => {
     // Force scroll to top on refresh
@@ -63,7 +62,6 @@ export default function Home() {
             status: item.status || '진행중'
           }));
           setEvents(mappedEvents);
-          setIsLiveMode(true);
         }
       } catch (err) {
         console.error('Failed to load live data', err);
@@ -195,11 +193,12 @@ export default function Home() {
           </div>
         ) : filteredEvents.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {filteredEvents.map((event) => (
+            {filteredEvents.map((event, index) => (
               <EventCard 
                 key={event.id} 
                 event={event} 
                 onClick={setSelectedEvent} 
+                priority={index < 4}
               />
             ))}
           </div>

@@ -8,9 +8,10 @@ interface EventCardProps {
   event: Event;
   onClick: (event: Event) => void;
   className?: string;
+  priority?: boolean;
 }
 
-export const EventCard: React.FC<EventCardProps> = ({ event, onClick, className = '' }) => {
+export const EventCard: React.FC<EventCardProps> = React.memo(({ event, onClick, className = '', priority = false }) => {
   // Simple client-side check for event expiration
   const isEnded = React.useMemo(() => {
     if (!event.period) return false;
@@ -76,7 +77,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick, className 
       onClick={() => onClick(event)}
       className={`group cursor-pointer ${className}`}
     >
-      <div className={`relative aspect-[2/3] overflow-hidden rounded-2xl bg-neutral-900 border shadow-lg transition-all duration-300 
+      <div className={`relative aspect-[2/3] overflow-hidden rounded-2xl bg-neutral-900 border shadow-lg transition-all duration-300 will-change-transform
         ${isEnded ? 'grayscale opacity-60 border-neutral-800' : 'border-neutral-800 group-hover:border-red-500/50'}
         ${!isEnded ? 'group-hover:shadow-red-500/10 group-hover:-translate-y-1' : ''}
       `}>
@@ -86,6 +87,8 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick, className 
           alt={event.title}
           width={400}
           height={600}
+          priority={priority}
+          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
           className={`w-full h-full object-cover transition-transform duration-500 ${isEnded ? '' : 'group-hover:scale-110'} opacity-80 ${isEnded ? '' : 'group-hover:opacity-100'}`}
         />
         <div className="absolute top-3 left-3 flex flex-col gap-1 items-start">
@@ -175,4 +178,6 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick, className 
       </div>
     </div>
   );
-};
+});
+
+EventCard.displayName = 'EventCard';
