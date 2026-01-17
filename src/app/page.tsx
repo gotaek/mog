@@ -13,6 +13,20 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 // API Key removed for now as AI features are postponed
 
+
+// JSON-LD for WebSite
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'MOG - 영화관 3사 굿즈 모아보기',
+  url: 'https://mog-web.pages.dev',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: 'https://mog-web.pages.dev/?q={search_term_string}',
+    'query-input': 'required name=search_term_string'
+  }
+};
+
 export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -157,6 +171,10 @@ export default function Home() {
       <Header 
         searchQuery={searchQuery} 
         setSearchQuery={setSearchQuery} 
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
       <main className="max-w-6xl mx-auto px-4 py-8 min-h-[80vh]">
