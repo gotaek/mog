@@ -39,6 +39,19 @@ export default function RootLayout({
           src='https://static.cloudflareinsights.com/beacon.min.js'
           data-cf-beacon='{"token": "133b98650f594c769d7912aa6e27f21a"}'
         />
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-Z4Z4LPG6KH"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-Z4Z4LPG6KH');
+          `}
+        </Script>
       </body>
     </html>
   );
