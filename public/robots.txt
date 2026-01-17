@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://mog-web.pages.dev/sitemap.xml

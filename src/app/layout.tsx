@@ -20,8 +20,8 @@ export const metadata: Metadata = {
     default: "MOG - 영화관 3사 굿즈 모아보기",
     template: "%s | MOG"
   },
-  description: "CGV, 롯데시네마, 메가박스의 굿즈 정보를 한곳에서 확인하세요. 오리지널 티켓, 시그니처 아트카드, TTT 등 한정판 굿즈 알림 및 재고 현황.",
-  keywords: ["영화 굿즈", "CGV", "롯데시네마", "메가박스", "오리지널 티켓", "시그니처 아트카드", "TTT", "무비씰", "필름마크", "영화 특전", "굿즈 재고"],
+  description: "CGV, 롯데시네마, 메가박스의 굿즈 정보를 한곳에서 확인하세요. 오리지널 티켓, 시그니처 아트카드, TTT, 포스터 등 한정판 굿즈 알림 및 재고 현황.",
+  keywords: ["영화 굿즈", "CGV", "롯데시네마", "메가박스", "오리지널 티켓", "포스터", "시그니처 아트카드", "TTT", "무비씰", "필름마크", "영화 특전", "굿즈 재고"],
   authors: [{ name: "MOG Team" }],
   creator: "MOG Team",
   publisher: "MOG",
