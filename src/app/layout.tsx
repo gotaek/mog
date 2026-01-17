@@ -56,8 +56,13 @@ export const metadata: Metadata = {
     google: "google-site-verification=YOUR_VERIFICATION_CODE", // User needs to fill this later
     other: {
       "naver-site-verification": "YOUR_NAVER_VERIFICATION_CODE", // User needs to fill this later
+      "geo.region": "KR",
+      "geo.placename": "South Korea",
     },
   },
+  other: {
+    "content-language": "ko-KR",
+  }
 };
 
 export default function RootLayout({

@@ -14,18 +14,50 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 // API Key removed for now as AI features are postponed
 
 
-// JSON-LD for WebSite
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: 'MOG - 영화관 3사 굿즈 모아보기',
-  url: 'https://mog-web.pages.dev',
-  potentialAction: {
-    '@type': 'SearchAction',
-    target: 'https://mog-web.pages.dev/?q={search_term_string}',
-    'query-input': 'required name=search_term_string'
+// JSON-LD for WebSite & FAQ
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'MOG - 영화관 3사 굿즈 모아보기',
+    url: 'https://mog-web.pages.dev',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://mog-web.pages.dev/?q={search_term_string}',
+      'query-input': 'required name=search_term_string'
+    }
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'MOG는 어떤 서비스인가요?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'MOG는 CGV, 롯데시네마, 메가박스 등 국내 주요 영화관의 특전(굿즈) 정보를 실시간으로 모아 보여주는 서비스입니다. 오리지널 티켓, 시그니처 아트카드, TTT 등 한정판 굿즈의 재고와 배포 일정을 한눈에 확인할 수 있습니다.'
+        }
+      },
+      {
+        '@type': 'Question',
+        name: '영화 특전 재고는 어떻게 확인하나요?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'MOG에서는 각 영화관의 공식 데이터를 기반으로 굿즈 재고 상황을 알려드립니다. 마감 임박한 굿즈는 "마감임박" 태그로 표시되며, 이미 종료된 이벤트는 회색으로 표시됩니다.'
+        }
+      },
+      {
+        '@type': 'Question',
+        name: '어떤 영화관의 굿즈를 볼 수 있나요?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '현재 CGV, 롯데시네마, 메가박스 3사의 모든 시그니처 굿즈(오리지널 티켓, 아트카드, 필름마크, 무비씰, 포스터 등) 정보를 지원합니다.'
+        }
+      }
+    ]
   }
-};
+];
 
 export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
